@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+</head>
+<body>
+	<h1>Welcome Admin</h1>
+	<br />
+	<form action="WelcomeAdmin" method="POST" >
+		<label>Choose Action</label><br />
+		<select name="choice" >
+			<option value="addCategory" >Add Category</option>
+			<option value="addProduct" >Add Product</option>
+			<option value="deleteCategory" >Delete Category</option>
+			<option value="deleteProduct" >Delete Product</option>
+			<option value="showCategory" >Show Category</option>
+		</select>
+		
+		<input type="submit" value="Choose" />
+	</form>
+</body>
+</html>

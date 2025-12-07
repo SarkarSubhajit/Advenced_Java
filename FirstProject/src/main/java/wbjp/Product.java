@@ -1,0 +1,109 @@
+package wbjp;
+
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+@WebServlet("/Product")
+public class Product extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+
+	Connection connection = null;
+	PreparedStatement psProduct = null;
+	
+	@Override
+	public void init(ServletConfig config) throws ServletException {
+		// TODO Auto-generated method stub
+		super.init(config);
+		
+		try {
+			connection = (Connection) getServletContext().getAttribute("GLOBAL_CONNECTION");
+			psProduct = connection.prepareStatement("select * from product where categoryId=?");
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServletException("Product Error", e);
+		}
+	}
+
+
+
+	@Override
+	public void destroy() {
+		super.destroy();
+		
+		try {
+			if (psProduct != null)
+				psProduct.close();
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+		String categoryId = request.getParameter("catId");
+		String userName = request.getParameter("userName");
+		ResultSet resultProduct = null;
+
+		try (PrintWriter out = response.getWriter()) {
+
+			psProduct.setString(1, categoryId);
+			
+			resultProduct = psProduct.executeQuery();
+
+			out.println("<html>");
+			out.println("<body>");
+			out.println("Welcome <b>" + userName + "</b><br/>");
+			out.println("<table border='1'>");
+
+			out.println("<tr>");
+			out.println("<th>Name</th>");
+			out.println("<th>Description</th>");
+			out.println("<th>Image</th>");
+			out.println("</tr>");
+
+			while (resultProduct.next()) {
+				out.println("<tr>");
+				out.println("<td>" + resultProduct.getString("productName") + "</td>");
+				out.println("<td>" + resultProduct.getString("description") + "</td>");
+				out.println("<td><img src='Images/" + resultProduct.getString("imageURL") + "' height='80px' width='80px' /></td>");
+				out.println("</tr>");
+			}
+
+			out.println("</table>");
+			out.println("</body>");
+			out.println("</html>");
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+
+			try {
+				if (resultProduct != null)
+					resultProduct.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+	}
+
+}

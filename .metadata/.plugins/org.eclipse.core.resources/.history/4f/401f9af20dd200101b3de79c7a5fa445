@@ -1,0 +1,107 @@
+package wbjp;
+
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+/**
+ * Servlet implementation class Category
+ */
+@WebServlet("/Category")
+public class Category extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+
+	Connection connection = null;
+	PreparedStatement psCategory = null;
+
+	@Override
+	public void init(ServletConfig config) throws ServletException {
+		// TODO Auto-generated method stub
+		super.init(config);
+
+		try {
+
+			connection = (Connection) getServletContext().getAttribute("GLOBAL_CONNECTION");
+			psCategory = connection.prepareStatement("SELECT * FROM category");
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			throw new ServletException("Category Error", e);
+		}
+	}
+
+	@Override
+	public void destroy() {
+		// TODO Auto-generated method stub
+		super.destroy();
+
+		try {
+			if (psCategory != null) {
+				psCategory.close();
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+
+		String userName = request.getParameter("userName");
+		ResultSet resultCategory = null;
+
+		try (PrintWriter out = response.getWriter()) {
+
+			resultCategory = psCategory.executeQuery();
+
+			out.println("<html>");
+			out.println("<body>");
+			out.println("Welcome <b>" + userName + "</b><br/>");
+			out.println("<table border='1'>");
+
+			out.println("<tr>");
+			out.println("<th>Name</th>");
+			out.println("<th>Description</th>");
+			out.println("<th>Image</th>");
+			out.println("</tr>");
+
+			while (resultCategory.next()) {
+				out.println("<tr>");
+				out.println("<td>" + resultCategory.getString("categoryName") + "</td>");
+				out.println("<td>" + resultCategory.getString("description") + "</td>");
+				out.println("<td><img src='Images/" + resultCategory.getString("imageURL") + "' height='80px' width='80px' /></td>");
+				out.println("</tr>");
+			}
+
+			out.println("</table>");
+			out.println("</body>");
+			out.println("</html>");
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+
+			try {
+				if (resultCategory != null)
+					resultCategory.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+	}
+
+}

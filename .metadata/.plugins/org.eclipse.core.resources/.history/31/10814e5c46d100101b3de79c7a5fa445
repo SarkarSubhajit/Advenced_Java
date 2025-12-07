@@ -1,0 +1,85 @@
+package wbjp;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+/**
+ * Servlet implementation class Authenticate
+ */
+@WebServlet("/Authenticate")
+public class Authenticate extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+
+	private static final String URL = "jdbc:mysql://localhost/userdb";
+	private static final String USERNAME = "root";
+	private static final String PASSWORD = "admin";
+
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
+	 *      response)
+	 */
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		// TODO Auto-generated method stub
+
+		
+
+		try(PrintWriter out = response.getWriter()) {
+			Class.forName("com.mysql.cj.jdbc.Driver");
+			
+			try (Connection connection = DriverManager.getConnection(URL, USERNAME, PASSWORD)) {
+				
+				try (PreparedStatement psAuthenticate = connection.prepareStatement("SELECT * FROM USER");
+					ResultSet resultAuthenticate = psAuthenticate.executeQuery()) {
+				
+					out.println("<html><body>");
+                    out.println("<h2>Users from database</h2>");
+                    out.println("<table border='1'>");
+
+                    // Optional: print table header using ResultSet metadata
+                    java.sql.ResultSetMetaData md = resultAuthenticate.getMetaData();
+                    int cols = md.getColumnCount();
+                    out.println("<tr>");
+                    for (int i = 1; i <= cols; i++) {
+                        out.println("<th>" + md.getColumnName(i) + "</th>");
+                    }
+                    out.println("</tr>");
+
+                    // Iterate the ResultSet
+                    while (resultAuthenticate.next()) {
+                        out.println("<tr>");
+                        for (int i = 1; i <= cols; i++) {
+                            Object value = resultAuthenticate.getObject(i); // safe generic getter
+                            out.println("<td>" + (value == null ? "" : value.toString()) + "</td>");
+                        }
+                        out.println("</tr>");
+                    }
+
+                    out.println("</table>");
+                    out.println("</body></html>");
+					
+				}
+				
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace(out);
+			}
+
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+}

@@ -1,0 +1,72 @@
+package wbjp;
+
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+@WebServlet("/admin/AddCategory")
+public class AddCategory extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+
+	Connection connection = null;
+	PreparedStatement psCategory = null;
+	
+	public void init(ServletConfig config) throws ServletException {
+		super.init(config);
+		
+		String sql = "insert into category(categoryName, description, imageURL) values(?,?,?)";
+		
+		try {
+			connection = (Connection) getServletContext().getAttribute("GLOBAL_CONNECTION");
+			psCategory = connection.prepareStatement(sql);
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void destroy() {
+		try {
+			if (psCategory != null)
+				psCategory.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
+
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+		String name = request.getParameter("categoryName");
+		String desc = request.getParameter("description");
+		String image = request.getParameter("imageURL");
+		
+		try(PrintWriter out = response.getWriter()) {
+			psCategory.clearParameters();
+			
+			psCategory.setString(1, name);
+			psCategory.setString(2, desc);
+			psCategory.setString(3, image);
+			
+			int rows = psCategory.executeUpdate();
+
+            out.println("Category Added Successfully. Rows affected: " + rows);
+            response.sendRedirect("Category");
+			
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+}
