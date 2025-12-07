@@ -1,7 +1,0 @@
-package wbjp;
-
-import jakarta.servlet.ServletContextListener;
-
-public class ContextListener implements ServletContextListener {
-
-}
