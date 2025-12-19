@@ -1,26 +1,30 @@
 package wbjp;
 
 import jakarta.servlet.ServletConfig;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import wbjp.dao.CategoryDAOImpl;
+import wbjp.entity.Category;
+import wbjp.exception.CategoryException;
+import wbjp.dao.CategoryDAO;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Iterator;
 
-/**
- * Servlet implementation class Category
- */
 @WebServlet("/Category")
-public class Category extends HttpServlet {
+public class CategoryServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
-	Connection connection = null;
+	CategoryDAO categoryDAO;
 	PreparedStatement psCategory = null;
 
 	@Override
@@ -28,16 +32,8 @@ public class Category extends HttpServlet {
 		// TODO Auto-generated method stub
 		super.init(config);
 
-		try {
-
-			connection = (Connection) getServletContext().getAttribute("GLOBAL_CONNECTION");
-			psCategory = connection.prepareStatement("SELECT * FROM category");
-
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			throw new ServletException("UserCategory Error", e);
-		}
+		Connection connection = (Connection) getServletContext().getAttribute("GLOBAL_CONNECTION");
+		categoryDAO = new CategoryDAOImpl(connection);
 	}
 
 	@Override
@@ -58,12 +54,17 @@ public class Category extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 
-		String userName = request.getParameter("userName");
-		ResultSet resultCategory = null;
-
 		try (PrintWriter out = response.getWriter()) {
 
-			resultCategory = psCategory.executeQuery();
+			HttpSession session = request.getSession(false);
+			
+			if (session == null) {
+				response.sendRedirect("login.html");
+				return;
+			}
+			
+			Iterator<Category> iter = categoryDAO.findAll();
+			String userName = (String) session.getAttribute("userName");
 
 			out.println("<html>");
 			out.println("<body>");
@@ -76,12 +77,15 @@ public class Category extends HttpServlet {
 			out.println("<th>Image</th>");
 			out.println("</tr>");
 
-			while (resultCategory.next()) {
+			while (iter.hasNext()) {
+				
+				Category objCategory = iter.next();
+				
 				out.println("<tr>");
-				out.println("<td><a href='UserProduct?userName=" + userName + "&catId=" + resultCategory.getString("categoryId")
-							+ "'>" + resultCategory.getString("categoryName") + "</a></td>");
-				out.println("<td>" + resultCategory.getString("description") + "</td>");
-				out.println("<td><img src='Images/" + resultCategory.getString("imageURL") + "' height='80px' width='80px' /></td>");
+				out.println("<td><a href='Product?catId=" + objCategory.getCategoryId()
+							+ "'>" + objCategory.getCategoryName() + "</a></td>");
+				out.println("<td>" + objCategory.getCategoryDescription() + "</td>");
+				out.println("<td><img src='Images/" + objCategory.getImagePath() + "' height='80px' width='80px' /></td>");
 				out.println("</tr>");
 			}
 
@@ -89,18 +93,9 @@ public class Category extends HttpServlet {
 			out.println("</body>");
 			out.println("</html>");
 
-		} catch (SQLException e) {
+		} catch (CategoryException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} finally {
-
-			try {
-				if (resultCategory != null)
-					resultCategory.close();
-			} catch (SQLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 		}
 
 	}

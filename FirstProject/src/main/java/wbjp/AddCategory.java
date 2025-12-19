@@ -1,71 +1,56 @@
 package wbjp;
 
+import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import wbjp.dao.CategoryDAO;
+import wbjp.dao.CategoryDAOImpl;
+import wbjp.entity.Category;
+import wbjp.exception.CategoryException;
+
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 
 @WebServlet("/admin/AddCategory")
 public class AddCategory extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
-	Connection connection = null;
-	PreparedStatement psCategory = null;
-	
+	CategoryDAO categoryDAO;
+
 	public void init(ServletConfig config) throws ServletException {
 		super.init(config);
-		
-		String sql = "insert into category(categoryName, description, imageURL) values(?,?,?)";
-		
-		try {
-			connection = (Connection) getServletContext().getAttribute("GLOBAL_CONNECTION");
-			psCategory = connection.prepareStatement(sql);
-			
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+
+		Connection connection = (Connection) getServletContext().getAttribute("GLOBAL_CONNECTION");
+		categoryDAO = new CategoryDAOImpl(connection);
 	}
 
 	public void destroy() {
-		try {
-			if (psCategory != null)
-				psCategory.close();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+
 	}
 
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+
 		String name = request.getParameter("categoryName");
 		String desc = request.getParameter("description");
 		String image = request.getParameter("imageURL");
-		
-		try(PrintWriter out = response.getWriter()) {
-			psCategory.clearParameters();
-			
-			psCategory.setString(1, name);
-			psCategory.setString(2, desc);
-			psCategory.setString(3, image);
-			
-			psCategory.executeUpdate();
 
-            response.sendRedirect(request.getContextPath() + "/welcome.html");
-			
-		} catch (SQLException e) {
+		try {
+
+			Category objCategory = new Category(name, desc, image);
+			categoryDAO.addCategory(objCategory);
+			RequestDispatcher dispatcher = request.getRequestDispatcher("/welcome.html");
+			dispatcher.include(request, response);
+
+		} catch (CategoryException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
 	}
 
 }

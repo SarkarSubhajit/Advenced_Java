@@ -6,6 +6,8 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -69,6 +71,10 @@ public class Authenticate extends HttpServlet {
 			
 			if (resultAuthenticate.next()) {
 				role = resultAuthenticate.getString("Role");
+				
+				HttpSession session = request.getSession();
+				session.setAttribute("userName", userName);
+				
 			} else {
 				out.println("Authentication Failed");
 				return;
@@ -77,7 +83,7 @@ public class Authenticate extends HttpServlet {
 			if (role.equals("Admin")) {
 				response.sendRedirect("welcome.html");
 			} else {
-				response.sendRedirect("Category?userName=" + userName);
+				response.sendRedirect("Category");
 			}
 
 		} catch (SQLException e) {

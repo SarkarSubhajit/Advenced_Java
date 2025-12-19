@@ -14,7 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 @WebServlet("/Product")
-public class Product extends HttpServlet {
+public class ProductServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
 	Connection connection = null;
